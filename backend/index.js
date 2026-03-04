@@ -62,6 +62,12 @@ async function initDb() {
             await db.query('INSERT INTO users (username, email, first_name, last_name) VALUES ($1, $2, $3, $4)', ['dummy_user', 'hello@anilsai.com', 'Anil', 'Sai']);
             console.log('Dummy user created.');
         }
+
+        try {
+            await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR(100);');
+        } catch (alterErr) {
+            console.warn('Could not add dob column:', alterErr.message);
+        }
     } catch (e) {
         if (e.code === '42P01') {
             console.warn('Tables missing! Run backend/database.sql in your postgres database.');
@@ -169,7 +175,7 @@ app.get('/api/user', auth, async (req, res) => {
     try {
         const userId = req.user.id;
 
-        const result = await db.query('SELECT id, username, email, first_name, last_name, profile_picture FROM users WHERE id = $1', [userId]);
+        const result = await db.query('SELECT id, username, email, first_name, last_name, profile_picture, dob FROM users WHERE id = $1', [userId]);
         if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
         res.json(result.rows[0]);
     } catch (err) {
@@ -182,10 +188,10 @@ app.get('/api/user', auth, async (req, res) => {
 app.put('/api/user', auth, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { username, email, first_name, last_name } = req.body;
+        const { username, email, first_name, last_name, dob } = req.body;
         const result = await db.query(
-            'UPDATE users SET username = $1, email = $2, first_name = $3, last_name = $4 WHERE id = $5 RETURNING id, username, email, first_name, last_name, profile_picture',
-            [username, email, first_name, last_name, userId]
+            'UPDATE users SET username = $1, email = $2, first_name = $3, last_name = $4, dob = $5 WHERE id = $6 RETURNING id, username, email, first_name, last_name, profile_picture, dob',
+            [username, email, first_name, last_name, dob, userId]
         );
         res.json(result.rows[0]);
     } catch (err) {
@@ -209,6 +215,21 @@ app.post('/api/user/avatar', auth, upload.single('avatar'), async (req, res) => 
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to upload avatar' });
+    }
+});
+
+// Remove User Avatar
+app.delete('/api/user/avatar', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const result = await db.query(
+            'UPDATE users SET profile_picture = $1 WHERE id = $2 RETURNING profile_picture',
+            ['', userId]
+        );
+        res.json({ profile_picture: result.rows[0].profile_picture });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to remove avatar' });
     }
 });
 

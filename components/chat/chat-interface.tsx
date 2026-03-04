@@ -636,7 +636,7 @@ export function ChatInterface() {
                                                 </>
                                             )}
                                         </Avatar>
-                                        <div className={cn("flex max-w-[80%] flex-col gap-2 relative group", message.role === "user" ? "items-end" : "items-start")}>
+                                        <div className={cn("flex max-w-[80%] min-w-0 flex-col gap-2 relative group", message.role === "user" ? "items-end" : "items-start")}>
                                             {editingMessageId === message.id ? (
                                                 <div className="w-full bg-muted p-4 rounded-xl shadow-sm border border-border min-w-[300px]">
                                                     <Textarea
@@ -653,14 +653,14 @@ export function ChatInterface() {
                                             ) : (
                                                 <div
                                                     className={cn(
-                                                        "rounded-2xl px-4 py-3 text-sm shadow-sm",
+                                                        "rounded-2xl px-4 py-3 text-sm shadow-sm overflow-hidden max-w-full",
                                                         message.role === "user"
                                                             ? "bg-primary text-primary-foreground"
                                                             : "bg-muted border border-muted-foreground/10 text-foreground"
                                                     )}
                                                 >
                                                     <div className={cn(
-                                                        "prose max-w-none text-wrap dark:prose-invert prose-p:leading-relaxed prose-pre:p-0",
+                                                        "prose max-w-none w-full break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0",
                                                         message.role === "user" ? "prose-p:text-primary-foreground text-primary-foreground" : "text-foreground"
                                                     )}>
                                                         {message.role === "assistant" && message.content === "" ? (

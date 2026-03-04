@@ -11,9 +11,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Mail, User, Shield, Key, Bell, Camera, Check, ExternalLink, Zap, CreditCard, LogOut, Loader2 } from "lucide-react";
+import { Mail, User, Shield, Key, Bell, Camera, Check, ExternalLink, Zap, CreditCard, LogOut, Loader2, CalendarIcon } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 export default function ProfilePage() {
     const [activeTab, setActiveTab] = useState("general");
     const [isLoading, setIsLoading] = useState(true);
@@ -22,7 +25,8 @@ export default function ProfilePage() {
         last_name: "",
         username: "",
         email: "",
-        profile_picture: ""
+        profile_picture: "",
+        dob: ""
     });
     const { token, logout, loading } = useAuth();
 
@@ -57,7 +61,8 @@ export default function ProfilePage() {
                         last_name: data.last_name || "",
                         username: data.username || "",
                         email: data.email || "",
-                        profile_picture: data.profile_picture ? `http://localhost:8000${data.profile_picture}` : ""
+                        profile_picture: data.profile_picture ? `http://localhost:8000${data.profile_picture}` : "",
+                        dob: data.dob || ""
                     });
                 }
                 setIsLoading(false);
@@ -68,6 +73,26 @@ export default function ProfilePage() {
                 toast.error("Failed to load profile data.");
             });
     }, [token]);
+
+    const isBirthday = React.useMemo(() => {
+        if (!user.dob) return false;
+        const today = new Date();
+        const dobDate = new Date(user.dob);
+        return today.getDate() === dobDate.getDate() && today.getMonth() === dobDate.getMonth();
+    }, [user.dob]);
+
+    useEffect(() => {
+        if (isBirthday) {
+            const birthdayShown = sessionStorage.getItem('birthdayShown');
+            if (!birthdayShown) {
+                toast.success("🎉 Happy Birthday! 🎂 We hope you have a fantastic day!", {
+                    duration: 10000,
+                    position: "top-center"
+                });
+                sessionStorage.setItem('birthdayShown', 'true');
+            }
+        }
+    }, [isBirthday]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
@@ -88,7 +113,8 @@ export default function ProfilePage() {
                     first_name: user.first_name,
                     last_name: user.last_name,
                     username: user.username,
-                    email: user.email
+                    email: user.email,
+                    dob: user.dob
                 })
             });
             if (res.ok) {
@@ -147,6 +173,27 @@ export default function ProfilePage() {
         }
     };
 
+    const handleRemoveAvatar = async () => {
+        try {
+            const toastId = toast.loading("Removing avatar...");
+            const res = await fetch("http://localhost:8000/api/user/avatar", {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            if (res.ok) {
+                setUser(prev => ({ ...prev, profile_picture: "" }));
+                toast.success("Avatar removed!", { id: toastId });
+                window.dispatchEvent(new CustomEvent('profile-updated'));
+            } else {
+                toast.error("Failed to remove avatar.", { id: toastId });
+            }
+        } catch (err) {
+            toast.error("An error occurred while removing avatar.");
+        }
+    };
+
     const renderTabContent = () => {
         switch (activeTab) {
             case "general":
@@ -170,19 +217,14 @@ export default function ProfilePage() {
                             <CardContent className="space-y-6">
                                 <div className="flex flex-col sm:flex-row items-center gap-6">
                                     <div
-                                        className="relative group cursor-pointer inline-block"
-                                        onClick={() => fileInputRef.current?.click()}
+                                        className="relative inline-block"
                                     >
-                                        <Avatar className="h-24 w-24 border-4 border-background shadow-xl transition-all group-hover:scale-105 group-hover:shadow-primary/25">
+                                        <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
                                             <AvatarImage src={user.profile_picture || "https://github.com/shadcn.png"} alt="Avatar" />
                                             <AvatarFallback className="bg-primary/10 text-primary text-xl">
                                                 {(user.first_name?.[0] || 'A') + (user.last_name?.[0] || 'S')}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Camera className="h-6 w-6 text-foreground mb-1" />
-                                            <span className="text-[10px] font-medium text-foreground">Upload</span>
-                                        </div>
                                     </div>
                                     <input
                                         type="file"
@@ -199,7 +241,7 @@ export default function ProfilePage() {
                                         </p>
                                         <div className="pt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
                                             <Button variant="outline" size="sm" className="shadow-sm" onClick={() => fileInputRef.current?.click()}>Upload new</Button>
-                                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10">Remove</Button>
+                                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={handleRemoveAvatar}>Remove</Button>
                                         </div>
                                     </div>
                                 </div>
@@ -217,16 +259,43 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="username">Username</Label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-2.5 text-muted-foreground text-sm font-semibold">@</span>
-                                        <Input id="username" placeholder="johndoe" value={user.username} onChange={handleChange} className="pl-8 bg-background/50 focus:bg-background transition-colors focus-visible:ring-primary" />
+                                <div className="grid gap-5 sm:grid-cols-2 mt-5">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="username">Username</Label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-2.5 text-muted-foreground text-sm font-semibold">@</span>
+                                            <Input id="username" placeholder="johndoe" value={user.username} onChange={handleChange} className="pl-8 bg-background/50 focus:bg-background transition-colors focus-visible:ring-primary" />
+                                        </div>
+                                        <p className="text-[13px] text-muted-foreground flex items-center gap-1 mt-1">
+                                            Your profile URL: <span className="text-foreground">vextron.ai/@{user.username || "username"}</span>
+                                            <ExternalLink className="h-3 w-3 inline cursor-pointer text-muted-foreground hover:text-primary transition-colors" />
+                                        </p>
                                     </div>
-                                    <p className="text-[13px] text-muted-foreground flex items-center gap-1 mt-1">
-                                        Your profile URL: <span className="text-foreground">vextron.ai/@{user.username || "username"}</span>
-                                        <ExternalLink className="h-3 w-3 inline cursor-pointer text-muted-foreground hover:text-primary transition-colors" />
-                                    </p>
+                                    <div className="space-y-2">
+                                        <Label>Date of Birth</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal bg-background/50 focus:bg-background transition-colors",
+                                                        !user.dob && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {user.dob ? format(new Date(user.dob), "PPP") : <span>Pick a date</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={user.dob ? new Date(user.dob) : undefined}
+                                                    onSelect={(date) => setUser(prev => ({ ...prev, dob: date ? date.toISOString() : "" }))}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
                                 </div>
                             </CardContent>
                             <CardFooter className="bg-muted/30 border-t border-border/50 flex justify-end gap-2 p-4">
@@ -269,6 +338,45 @@ export default function ProfilePage() {
                     </motion.div>
                 );
 
+            case "notifications":
+                return (
+                    <motion.div
+                        key="notifications"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-8"
+                    >
+                        {isBirthday && (
+                            <Card className="border-primary/50 bg-primary/5 shadow-md shadow-primary/10 transition-all hover:shadow-primary/20">
+                                <CardContent className="flex items-center gap-4 p-6">
+                                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                                        <Zap className="h-6 w-6 text-primary" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h3 className="text-xl font-semibold text-foreground">Happy Birthday, {user.first_name || "User"}! 🎉</h3>
+                                        <p className="text-muted-foreground text-sm">
+                                            Wishing you a fantastic day ahead! We&apos;re glad to have you with us. 🎂
+                                        </p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+                        <Card className="border-dashed border-2 border-border/50 bg-transparent shadow-none">
+                            <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+                                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                                    <Bell className="h-6 w-6 text-primary" />
+                                </div>
+                                <h3 className="text-xl font-medium">{isBirthday ? "No other notifications" : "No new notifications"}</h3>
+                                <p className="text-muted-foreground mt-2 max-w-sm">
+                                    You&apos;re all caught up! Check back later for new alerts and updates.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                );
+
             default:
                 return (
                     <motion.div
@@ -286,7 +394,7 @@ export default function ProfilePage() {
                                 </div>
                                 <h3 className="text-xl font-medium">Coming Soon</h3>
                                 <p className="text-muted-foreground mt-2 max-w-sm">
-                                    We're still working on this section. Check back later for updates to these settings.
+                                    We&apos;re still working on this section. Check back later for updates to these settings.
                                 </p>
                             </CardContent>
                         </Card>
