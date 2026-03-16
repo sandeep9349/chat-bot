@@ -216,6 +216,12 @@ export function ChatInterface() {
             return;
         }
 
+        if (!chatId) {
+            toast.error("Cannot edit message - no active chat");
+            setEditingMessageId(null);
+            return;
+        }
+
         // Optimistic update
         setEditingMessageId(null);
         setIsLoading(true);
@@ -334,6 +340,8 @@ export function ChatInterface() {
             }])
 
             // 3. Send message to backend and stream response
+            if (!currentChatId) throw new Error("No chat ID available");
+            
             const response = await fetch(API_ENDPOINTS.chats.messages(currentChatId), {
                 method: 'POST',
                 headers: {
