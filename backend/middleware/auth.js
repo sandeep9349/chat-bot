@@ -11,7 +11,11 @@ module.exports = function (req, res, next) {
 
     // Verify token
     try {
-        const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET || 'your_jwt_secret');
+        // Ensure JWT_SECRET is set (should already be validated in index.js)
+        if (!process.env.JWT_SECRET) {
+            throw new Error('JWT_SECRET not configured');
+        }
+        const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
         req.user = decoded.user;
         next();
     } catch (err) {

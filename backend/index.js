@@ -14,6 +14,14 @@ const auth = require('./middleware/auth');
 const helmet = require('helmet');
 const compression = require('compression');
 
+// Validate required environment variables
+const requiredEnvVars = ['JWT_SECRET', 'GEMINI_API_KEY'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+if (missingEnvVars.length > 0) {
+    console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+    process.exit(1);
+}
+
 const app = express();
 const port = process.env.PORT || 8000;
 
@@ -83,13 +91,20 @@ async function initDb() {
         }
     } catch (e) {
         if (e.code === '42P01') {
-            console.warn('Tables missing! Run backend/database.sql in your postgres database.');
+            console.error('CRITICAL: Tables missing! Run backend/database.sql in your postgres database.');
+            process.exit(1);
         } else {
             console.error('DB Init Error:', e.message);
+            process.exit(1);
         }
     }
 }
-initDb();
+
+// Initialize database with error handling
+initDb().catch(err => {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+});
 
 // Visitor count routes
 app.get('/api/visitors', async (req, res) => {
@@ -138,7 +153,7 @@ app.post('/api/auth/register', async (req, res) => {
 
         // Create JWT
         const payload = { user: { id: newUser.rows[0].id } };
-        jwt.sign(payload, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: 360000 }, (err, token) => {
+        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: 360000 }, (err, token) => {
             if (err) throw err;
             res.json({ token, user: newUser.rows[0] });
         });
@@ -170,7 +185,7 @@ app.post('/api/auth/login', async (req, res) => {
 
         // Create JWT
         const payload = { user: { id: user.id } };
-        jwt.sign(payload, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: 360000 }, (err, token) => {
+        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: 360000 }, (err, token) => {
             if (err) throw err;
             // Don't send back password
             delete user.password;
@@ -470,6 +485,29 @@ app.put('/api/chats/:id/messages/:messageId/edit', auth, async (req, res) => {
     }
 });
 
-app.listen(port, () => {
+// Start server with proper error handling
+const server = app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully...');
+    server.close(() => {
+        console.log('Server closed');
+        db.close().then(() => {
+            console.log('Database connection closed');
+            process.exit(0);
+        }).catch(err => {
+            console.error('Error closing database connection:', err);
+            process.exit(1);
+        });
+    });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    process.exit(1);
 });

@@ -1,7 +1,7 @@
 {
-  "name": "backend",
+  "name": "chatbot-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Chatbot backend with PostgreSQL and Gemini AI",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -12,6 +12,10 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "dependencies": {
     "@google/genai": "^1.42.0",
     "bcryptjs": "^3.0.3",

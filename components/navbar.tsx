@@ -31,21 +31,14 @@ export default function Navbar() {
                             <Sparkles className="h-4 w-4" />
                         </div>
                         <span className="hidden font-bold sm:inline-block">
-                            ChatBot AI
+                            Vextron AI
                         </span>
                     </Link>
-                    <nav className="flex items-center space-x-6 text-sm font-medium">
-                        <Link
-                            href="/chat"
-                            className="transition-colors hover:text-foreground/80 text-foreground/60"
-                        >
-                            Chat
-                        </Link>
-                    </nav>
+                
                 </div>
                 <div className="flex flex-1 items-center justify-end space-x-2">
                     {/* Change space-x-2 to space-x-4 here */}
-                    <nav className="flex items-center space-x-4">
+                    <nav className="flex items-center space-x-7">
                         <ModeToggle />
                         {loading ? (
                             <div className="h-8 w-8 rounded-full bg-muted animate-pulse"></div>
