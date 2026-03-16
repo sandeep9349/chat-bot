@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Github, Twitter, Linkedin, Mail, Sparkles, Users } from "lucide-react";
 import CountUp from "react-countup";
 import { useEffect, useState } from "react";
+import { API_ENDPOINTS } from "@/lib/api-config";
 
 export default function Footer() {
     const [mounted, setMounted] = useState(false);
@@ -17,7 +18,7 @@ export default function Footer() {
 
         if (!hasVisited) {
             // First time this session, increment and fetch count
-            fetch("http://localhost:8000/api/visitors", { method: 'POST' })
+            fetch(API_ENDPOINTS.visitors, { method: 'POST' })
                 .then(res => res.json())
                 .then(data => {
                     if (data.count !== undefined) {
@@ -28,7 +29,7 @@ export default function Footer() {
                 .catch(err => console.error("Failed to update visitor count:", err));
         } else {
             // Already visited this session, just fetch the current count
-            fetch("http://localhost:8000/api/visitors")
+            fetch(API_ENDPOINTS.visitors)
                 .then(res => res.json())
                 .then(data => {
                     if (data.count !== undefined) {

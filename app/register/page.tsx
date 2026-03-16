@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { API_ENDPOINTS } from "@/lib/api-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +37,7 @@ export default function RegisterPage() {
         setError("");
 
         try {
-            const res = await fetch("http://localhost:8000/api/auth/register", {
+            const res = await fetch(API_ENDPOINTS.auth.register, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
@@ -51,6 +52,7 @@ export default function RegisterPage() {
                 setError(data.error || "Registration failed");
             }
         } catch (err) {
+            console.error("Registration error:", err);
             setError("An error occurred during registration. Please try again.");
         } finally {
             setLoading(false);

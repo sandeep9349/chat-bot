@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { API_ENDPOINTS } from "@/lib/api-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +26,7 @@ export default function LoginPage() {
         setError("");
 
         try {
-            const res = await fetch("http://localhost:8000/api/auth/login", {
+            const res = await fetch(API_ENDPOINTS.auth.login, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
@@ -40,6 +41,7 @@ export default function LoginPage() {
                 setError(data.error || "Login failed");
             }
         } catch (err) {
+            console.error("Login error:", err);
             setError("An error occurred during login. Please try again.");
         } finally {
             setLoading(false);

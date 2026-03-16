@@ -21,8 +21,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/AuthContext"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+import { API_ENDPOINTS } from "@/lib/api-config"
 
 export function AppSidebar() {
     const [chatHistory, setChatHistory] = React.useState<any[]>([])
@@ -39,7 +38,7 @@ export function AppSidebar() {
     const fetchChats = async () => {
         try {
             if (!token) return;
-            const res = await fetch(`${API_URL}/api/chats`, {
+            const res = await fetch(API_ENDPOINTS.chats.list, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

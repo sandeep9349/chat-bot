@@ -15,12 +15,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useAuth } from "@/context/AuthContext";
+import { getImageUrl } from "@/lib/api-config";
 
 export default function Navbar() {
     const { user, logout, loading } = useAuth();
 
     const initials = user ? (user.first_name?.[0] || 'A') + (user.last_name?.[0] || 'S') : 'U';
-    const profilePic = user?.profile_picture ? `http://localhost:8000${user.profile_picture}` : undefined;
+    const profilePic = getImageUrl(user?.profile_picture);
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">

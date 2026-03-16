@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AvatarEditor from "react-avatar-editor";
 import { toast } from "sonner";
+import { API_ENDPOINTS, getImageUrl } from "@/lib/api-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,7 +49,7 @@ export default function ProfilePage() {
             setIsLoading(false);
             return;
         }
-        fetch("http://localhost:8000/api/user", {
+        fetch(API_ENDPOINTS.user.profile, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -61,14 +62,14 @@ export default function ProfilePage() {
                         last_name: data.last_name || "",
                         username: data.username || "",
                         email: data.email || "",
-                        profile_picture: data.profile_picture ? `http://localhost:8000${data.profile_picture}` : "",
+                        profile_picture: getImageUrl(data.profile_picture),
                         dob: data.dob || ""
                     });
                 }
                 setIsLoading(false);
             })
             .catch(err => {
-                console.error(err);
+                console.error("Failed to fetch profile:", err);
                 setIsLoading(false);
                 toast.error("Failed to load profile data.");
             });
@@ -103,7 +104,7 @@ export default function ProfilePage() {
 
     const handleSaveProfile = async () => {
         try {
-            const res = await fetch("http://localhost:8000/api/user", {
+            const res = await fetch(API_ENDPOINTS.user.profile, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -151,7 +152,7 @@ export default function ProfilePage() {
                 try {
                     setIsCropModalOpen(false);
                     const toastId = toast.loading("Uploading avatar...");
-                    const res = await fetch("http://localhost:8000/api/user/avatar", {
+                    const res = await fetch(API_ENDPOINTS.user.avatar, {
                         method: "POST",
                         headers: {
                             "Authorization": `Bearer ${token}`
@@ -160,13 +161,14 @@ export default function ProfilePage() {
                     });
                     if (res.ok) {
                         const data = await res.json();
-                        setUser(prev => ({ ...prev, profile_picture: `http://localhost:8000${data.profile_picture}?t=${Date.now()}` }));
+                        setUser(prev => ({ ...prev, profile_picture: getImageUrl(data.profile_picture) + `?t=${Date.now()}` }));
                         toast.success("Avatar updated!", { id: toastId });
                         window.dispatchEvent(new CustomEvent('profile-updated'));
                     } else {
                         toast.error("Failed to upload avatar.", { id: toastId });
                     }
                 } catch (err) {
+                    console.error("Avatar upload error:", err);
                     toast.error("An error occurred during upload.");
                 }
             });
@@ -176,7 +178,7 @@ export default function ProfilePage() {
     const handleRemoveAvatar = async () => {
         try {
             const toastId = toast.loading("Removing avatar...");
-            const res = await fetch("http://localhost:8000/api/user/avatar", {
+            const res = await fetch(API_ENDPOINTS.user.avatar, {
                 method: "DELETE",
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -190,6 +192,7 @@ export default function ProfilePage() {
                 toast.error("Failed to remove avatar.", { id: toastId });
             }
         } catch (err) {
+            console.error("Avatar removal error:", err);
             toast.error("An error occurred while removing avatar.");
         }
     };

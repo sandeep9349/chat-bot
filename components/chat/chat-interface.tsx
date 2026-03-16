@@ -38,8 +38,7 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useAuth } from "@/context/AuthContext"
 import { motion } from "framer-motion"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+import { API_ENDPOINTS, getImageUrl } from "@/lib/api-config"
 
 interface Message {
     id: string
@@ -84,7 +83,7 @@ export function ChatInterface() {
 
         const fetchMessages = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/chats/${chatId}/messages`, {
+                const res = await fetch(API_ENDPOINTS.chats.messages(chatId), {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -237,7 +236,7 @@ export function ChatInterface() {
         }]);
 
         try {
-            const response = await fetch(`${API_URL}/api/chats/${chatId}/messages/${messageId}/edit`, {
+            const response = await fetch(API_ENDPOINTS.chats.editMessage(chatId, messageId), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -305,7 +304,7 @@ export function ChatInterface() {
         try {
             // 1. Create chat if it doesn't exist
             if (!currentChatId) {
-                const res = await fetch(`${API_URL}/api/chats`, {
+                const res = await fetch(API_ENDPOINTS.chats.create, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -335,7 +334,7 @@ export function ChatInterface() {
             }])
 
             // 3. Send message to backend and stream response
-            const response = await fetch(`${API_URL}/api/chats/${currentChatId}/messages`, {
+            const response = await fetch(API_ENDPOINTS.chats.messages(currentChatId), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -629,7 +628,7 @@ export function ChatInterface() {
                                                 <Bot className="h-5 w-5" />
                                             ) : (
                                                 <>
-                                                    <AvatarImage src={user?.profile_picture ? `${API_URL}${user.profile_picture}` : undefined} alt="@user" />
+                                                    <AvatarImage src={getImageUrl(user?.profile_picture)} alt="@user" />
                                                     <AvatarFallback className="bg-transparent text-foreground text-xs">
                                                         {user ? `${user.first_name?.[0] || 'A'}${user.last_name?.[0] || 'S'}` : <User className="h-5 w-5" />}
                                                     </AvatarFallback>
