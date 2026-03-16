@@ -72,10 +72,14 @@ async function initDb() {
         if (!tablesExist) {
             console.log('\n⚠️  Tables not found. Running database initialization...\n');
             await initDatabase();
+            console.log('\n✅ Database initialization completed\n');
+        } else {
+            console.log('\n✅ All tables already exist\n');
         }
 
         // Step 3: Verify all required columns exist (backward compatibility)
         try {
+            console.log('🔄 Verifying required columns...');
             await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(255);');
             await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(100);');
             await db.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(100);');
@@ -89,19 +93,16 @@ async function initDb() {
             
             console.log('✅ All required columns verified/added');
         } catch (alterErr) {
-            console.warn('⚠️  Could not add columns (they may already exist):', alterErr.message);
+            console.warn('⚠️  Could not verify columns:', alterErr.message);
         }
 
         console.log('\n=== ✅ DATABASE INITIALIZATION COMPLETED ===\n');
+        return true;
     } catch (e) {
-        console.error('\n❌ CRITICAL DATABASE ERROR ===\n');
+        console.error('\n❌ CRITICAL DATABASE ERROR\n');
         console.error('Error Code:', e.code);
         console.error('Error Message:', e.message);
-        
-        if (e.code === '42P01') {
-            console.error('\nTables are missing! This should not happen if initialization ran successfully.');
-            console.error('Try running: npm run init-db');
-        }
+        console.error('\nFull error:', e);
         
         process.exit(1);
     }

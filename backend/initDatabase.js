@@ -17,26 +17,42 @@ async function initDatabase() {
         const sqlFilePath = path.join(__dirname, 'database.sql');
         const sqlScript = fs.readFileSync(sqlFilePath, 'utf8');
 
+        // Remove comments and split by semicolon
+        let cleanedScript = sqlScript
+            .split('\n')
+            .filter(line => !line.trim().startsWith('--')) // Remove comment lines
+            .join('\n');
+
         // Split SQL statements and filter empty ones
-        const statements = sqlScript
+        const statements = cleanedScript
             .split(';')
             .map(stmt => stmt.trim())
-            .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+            .filter(stmt => stmt.length > 0);
+
+        console.log(`Found ${statements.length} SQL statements to execute`);
 
         // Execute each SQL statement
-        for (const statement of statements) {
+        let successCount = 0;
+        for (let i = 0; i < statements.length; i++) {
+            const statement = statements[i];
             try {
-                await db.query(statement);
-                console.log('✅ Executed:', statement.substring(0, 50) + '...');
+                const result = await db.query(statement);
+                console.log(`✅ [${i + 1}/${statements.length}] Executed: ${statement.substring(0, 50)}...`);
+                successCount++;
             } catch (error) {
                 // Some errors are acceptable (e.g., duplicate index)
-                if (error.code !== '42P07') { // 42P07 = duplicate table/index
-                    console.warn('⚠️  SQL Warning:', error.message);
+                if (error.code === '42P07') { // 42P07 = duplicate table/index
+                    console.log(`ℹ️  [${i + 1}/${statements.length}] Index/table already exists: ${statement.substring(0, 50)}...`);
+                    successCount++;
+                } else {
+                    console.error(`❌ [${i + 1}/${statements.length}] SQL Error: ${error.message}`);
+                    console.error(`Statement: ${statement.substring(0, 100)}...`);
+                    throw error; // Throw error for critical issues
                 }
             }
         }
 
-        console.log('✅ Database schema initialized successfully');
+        console.log(`✅ Database schema initialized successfully (${successCount}/${statements.length} statements)`);
 
         // Initialize default data
         await initializeDefaultData();
