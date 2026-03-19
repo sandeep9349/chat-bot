@@ -18,6 +18,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { ShareDialog } from "@/components/share-dialog";
+import { Share2 } from "lucide-react";
 export default function ProfilePage() {
     const [activeTab, setActiveTab] = useState("general");
     const [isLoading, setIsLoading] = useState(true);
@@ -30,6 +32,7 @@ export default function ProfilePage() {
         dob: ""
     });
     const { token, logout, loading } = useAuth();
+    const [isShareOpen, setIsShareOpen] = useState(false);
 
     // Avatar upload states
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -454,7 +457,18 @@ export default function ProfilePage() {
                             </p>
                         </div>
                     </div>
+                    <div className="flex gap-3">
+                        <Button 
+                            variant="outline" 
+                            className="gap-2 border-primary/20 hover:bg-primary/5 transition-all shadow-sm"
+                            onClick={() => setIsShareOpen(true)}
+                        >
+                            <Share2 className="h-4 w-4" />
+                            Share Profile
+                        </Button>
+                    </div>
                 </div>
+                <ShareDialog isOpen={isShareOpen} onOpenChange={setIsShareOpen} />
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                     {/* Navigation Sidebar */}

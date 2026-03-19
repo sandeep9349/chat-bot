@@ -23,6 +23,14 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/context/AuthContext"
 import { API_ENDPOINTS, getImageUrl } from "@/lib/api-config"
+import { ShareDialog } from "@/components/share-dialog"
+import { Share2, ChevronUp } from "lucide-react"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function AppSidebar() {
     const [chatHistory, setChatHistory] = React.useState<any[]>([])
@@ -31,6 +39,7 @@ export function AppSidebar() {
     const [shortcut, setShortcut] = React.useState("Ctrl+K")
     const { isMobile, setOpenMobile } = useSidebar()
     const { token, logout, user } = useAuth()
+    const [isShareOpen, setIsShareOpen] = React.useState(false)
 
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -256,18 +265,48 @@ export function AppSidebar() {
             <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <div className="flex items-center gap-2 px-2 py-2">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={getImageUrl(user?.profile_picture)} alt={user?.username || "User"} />
-                                <AvatarFallback>{user ? `${user.first_name?.[0] || 'A'}${user.last_name?.[0] || 'S'}` : 'U'}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{user?.username || 'User'}</p>
-                                <p className="text-xs text-muted-foreground truncate">{user?.email || ''}</p>
-                            </div>
-                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <SidebarMenuButton 
+                                    size="lg" 
+                                    className="w-full hover:bg-sidebar-accent transition-colors"
+                                >
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={getImageUrl(user?.profile_picture)} alt={user?.username || "User"} />
+                                        <AvatarFallback>{user ? `${user.first_name?.[0] || 'A'}${user.last_name?.[0] || 'S'}` : 'U'}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0 text-left">
+                                        <p className="text-sm font-medium truncate">{user?.username || 'User'}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{user?.email || ''}</p>
+                                    </div>
+                                    <ChevronUp className="ml-auto h-4 w-4 text-muted-foreground" />
+                                </SidebarMenuButton>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                side="top"
+                                align="start"
+                                className="w-[--radix-dropdown-menu-trigger-width] mb-2"
+                            >
+                                <DropdownMenuItem onClick={() => router.push('/profile')}>
+                                    <User className="mr-2 h-4 w-4" />
+                                    <span>Profile Details</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setIsShareOpen(true)}>
+                                    <Share2 className="mr-2 h-4 w-4" />
+                                    <span>Share Vextron AI</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                    className="text-destructive focus:text-destructive" 
+                                    onClick={logout}
+                                >
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    <span>Log out</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </SidebarMenuItem>
                 </SidebarMenu>
+                <ShareDialog isOpen={isShareOpen} onOpenChange={setIsShareOpen} />
             </SidebarFooter>
             <SidebarRail />
         </Sidebar>

@@ -503,76 +503,7 @@ export function ChatInterface() {
     return (
         <div className="flex h-full flex-col">
             {/* Header */}
-            <header className="sticky top-0 z-10 flex h-14 w-full items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/60 shrink-0">
-                <div className="flex items-center gap-2">
-                    <SidebarTrigger />
-                    <Separator orientation="vertical" className="mr-2 h-4" />
-                    <span className="text-sm font-medium text-muted-foreground">Vextron 1.0</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <ModeToggle />
-
-                    <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
-                        <DialogContent className="sm:max-w-md">
-                            <DialogHeader>
-                                <DialogTitle>Share chat</DialogTitle>
-                                <DialogDescription>
-                                    Anyone with the link will be able to view this chat.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="flex items-center space-x-2">
-                                <div className="grid flex-1 gap-2">
-                                    <Label htmlFor="link" className="sr-only">
-                                        Link
-                                    </Label>
-                                    <Input
-                                        id="link"
-                                        defaultValue={`https://vextron.ai/chat/share/${chatId || '12345'}`}
-                                        readOnly
-                                    />
-                                </div>
-                                <Button type="submit" size="sm" className="px-3" onClick={handleShare}>
-                                    <span className="sr-only">Copy</span>
-                                    Copy
-                                </Button>
-                            </div>
-                            <DialogFooter className="sm:justify-start">
-                                <div className="text-[0.8rem] text-muted-foreground">
-                                    Link expires in 7 days.
-                                </div>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                                <Avatar className="h-8 w-8 transition-opacity hover:opacity-80">
-                                    <AvatarImage src={user?.profile_picture ? `http://localhost:8000${user.profile_picture}` : "https://github.com/shadcn.png"} alt="@user" />
-                                    <AvatarFallback>{user ? `${user.first_name?.[0] || 'A'}${user.last_name?.[0] || 'S'}` : 'U'}</AvatarFallback>
-                                </Avatar>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => router.push("/profile")}>
-                                <User className="mr-2 h-4 w-4" />
-                                Profile
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setIsShareOpen(true)}>
-                                <Share2 className="mr-2 h-4 w-4" />
-                                Share
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive mb-1" onClick={() => logout()}>
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Log out
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </header>
+           <SidebarTrigger />
 
             {/* Main Layout Area */}
             <div className="flex-1 overflow-hidden flex flex-col">

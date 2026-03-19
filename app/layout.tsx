@@ -95,6 +95,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: baseUrl,
   },
+  verification: {
+    google: "M-RH5LhTnCCIBauNpdYEQx7i0dH9t1g0u-PSwKkgYxQ",
+  },
 };
 
 export const viewport: Viewport = {

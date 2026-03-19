@@ -28,14 +28,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for token in localStorage
+        // Check for token and user in localStorage
         const storedToken = localStorage.getItem("token");
+        const storedUser = localStorage.getItem("user");
+        
         if (storedToken) {
             setToken(storedToken);
+            if (storedUser) {
+                try {
+                    setUser(JSON.parse(storedUser));
+                } catch (e) {
+                    console.error("Failed to parse stored user", e);
+                }
+            }
             fetchUserProfile(storedToken);
         } else {
             setLoading(false);
         }
+
+        const handleProfileUpdate = () => {
+            const token = localStorage.getItem("token");
+            if (token) fetchUserProfile(token);
+        };
+
+        window.addEventListener('profile-updated', handleProfileUpdate);
+        return () => window.removeEventListener('profile-updated', handleProfileUpdate);
     }, []);
 
     const fetchUserProfile = async (authToken: string) => {
@@ -49,8 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (res.ok) {
                 const userData = await res.json();
                 setUser(userData);
+                localStorage.setItem("user", JSON.stringify(userData));
             } else {
                 localStorage.removeItem("token");
+                localStorage.removeItem("user");
                 setToken(null);
                 setUser(null);
             }
@@ -63,12 +82,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = (newToken: string, userData: User) => {
         localStorage.setItem("token", newToken);
+        localStorage.setItem("user", JSON.stringify(userData));
         setToken(newToken);
         setUser(userData);
     };
 
     const logout = () => {
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
         setToken(null);
         setUser(null);
     };
