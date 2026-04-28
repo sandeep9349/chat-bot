@@ -35,8 +35,9 @@ app.use(helmet({
 app.use(compression());
 
 // CORS Configuration
+const allowedOrigins = (process.env.FRONTEND_URL || '*').split(',').map(url => url.trim());
 app.use(cors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: allowedOrigins.includes('*') ? '*' : allowedOrigins,
     credentials: true,
 }));
 app.use(express.json());
